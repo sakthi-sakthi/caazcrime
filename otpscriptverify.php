@@ -1,7 +1,6 @@
 <?php
 session_start();
 require_once('includes/db.php');
-require_once('session_check.php');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $enteredOTP = array_map('intval', $_POST['otp']);

@@ -1,7 +1,25 @@
-<?php require_once('includes/session.php');
+<?php
+require_once('includes/session.php');
 require_once('includes/conn.php');
 require_once('check.php');
 require_once('session_check.php');
+
+$queryEmployees = "SELECT COUNT(*) as count FROM employees";
+$resultEmployees = mysqli_query($mysqli, $queryEmployees);
+$countEmployees = mysqli_fetch_assoc($resultEmployees)['count'];
+
+$queryUsers = "SELECT COUNT(*) as count FROM users";
+$resultUsers = mysqli_query($mysqli, $queryUsers);
+$countUsers = mysqli_fetch_assoc($resultUsers)['count'];
+
+$queryCases = "SELECT COUNT(*) as count FROM cases";
+$resultCases = mysqli_query($mysqli, $queryCases);
+$countCases = mysqli_fetch_assoc($resultCases)['count'];
+
+$queryClosedCases = "SELECT COUNT(*) as count FROM cases WHERE status = 'close'";
+$resultClosedCases = mysqli_query($mysqli, $queryClosedCases);
+$countClosedCases = mysqli_fetch_assoc($resultClosedCases)['count'];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -66,23 +84,42 @@ require_once('session_check.php');
                     </a>
                 </li>
                 <li>
-                    <a href="invest.php">
-                        <i class="fa fa-link"></i>
-                        Report Issues
+                    <a href="criminalsearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Criminals
                     </a>
                 </li>
-                <?php
-                if ($_SESSION['permission'] == 1 or $_SESSION['permission'] == 2) {
+                <li>
+                    <a href="addcases.php">
+                        <i class="fa fa-plus"></i>
+                        Add Cases
+                    </a>
 
-
-                    ?>
-                    <li>
-                        <a href="v_issue.php">
-                            <i class="fa fa-table"></i>
-                            View Issues
-                        </a>
-                    </li>
-                <?php } ?>
+                </li>
+                <li>
+                    <a href="allcases.php">
+                        <i class="fa fa-book"></i>
+                        All Cases
+                    </a>
+                </li>
+                <li>
+                    <a href="casesearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Cases
+                    </a>
+                </li>
+                <li>
+                    <a href="caseratio.php">
+                        <i class="fa fa-bar-chart-o"></i>
+                        Case Ratio Chart
+                    </a>
+                </li>
+                <li>
+                    <a href="casetracker.php">
+                        <i class="fa fa-search"></i>
+                        Find all Cases
+                    </a>
+                </li>
                 <?php
                 if ($_SESSION['permission'] == 1) {
                     ?>
@@ -106,7 +143,7 @@ require_once('session_check.php');
                     </a>
                 </li>
                 <li>
-                    <a href="logout.php">
+                    <a href="#" onclick="logoutConfirmation()">
                         <i class="fa fa-power-off"></i>
                         Logout
                     </a>
@@ -135,10 +172,11 @@ require_once('session_check.php');
 
                     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                         <ul class="nav navbar-nav navbar-right  makotasamuel">
-                            <li><a href="#">
+                            <li><a href="#" style="color:white;">
                                     <?php require_once('includes/name.php'); ?>
                                 </a></li>
-                            <li><a href="logout.php"><i class="fa fa-power-off"> Logout</i></a></li>
+                            <li><a href="logout.php"><i class="fa fa-power-off" style="color:white;"> Logout</i></a>
+                            </li>
 
                         </ul>
                     </div>
@@ -152,13 +190,13 @@ require_once('session_check.php');
                         <div class="panel-heading">
                             <div class="row">
                                 <div class="col-xs-4">
-                                    <i class="fa fa-user fa-5x"></i>
+                                    <i class="fa fa-group fa-5x"></i>
                                 </div>
                                 <div class="col-xs-9 text-right">
                                     <div class="huge">
-                                        <?php echo $users; ?>
+                                        <?php echo $countEmployees; ?>
                                     </div>
-                                    <div>Total Number Of Users</div>
+                                    <div>Total Number Of Criminals</div>
                                 </div>
                             </div>
                         </div>
@@ -170,11 +208,11 @@ require_once('session_check.php');
                         <div class="panel-heading">
                             <div class="row">
                                 <div class="col-xs-4">
-                                    <i class="fa fa-link fa-5x"></i>
+                                    <i class="fa fa-book fa-5x"></i>
                                 </div>
                                 <div class="col-xs-9 text-right">
                                     <div class="huge">
-                                        <?php echo $cases; ?>
+                                        <?php echo $countCases; ?>
                                     </div>
                                     <div>Total Number Of Cases</div>
                                 </div>
@@ -192,7 +230,7 @@ require_once('session_check.php');
                                 </div>
                                 <div class="col-xs-9 text-right">
                                     <div class="huge">
-                                        <?php echo $users; ?>
+                                        <?php echo $countUsers; ?>
                                     </div>
                                     <div>Total Number Of Users</div>
                                 </div>
@@ -206,19 +244,19 @@ require_once('session_check.php');
                         <div class="panel-heading">
                             <div class="row">
                                 <div class="col-xs-4">
-                                    <i class="fa fa-link fa-5x"></i>
+                                    <i class="fa fa-check fa-5x"></i>
                                 </div>
                                 <div class="col-xs-9 text-right">
                                     <div class="huge">
-                                        <?php echo $cases; ?>
+                                        <?php echo $countClosedCases; ?>
                                     </div>
-                                    <div>Total Number Of Cases</div>
+                                    <div>Total Number Of Closed Cases</div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
+
 
                 <div class="row">
                     <div class="col-lg-6">
@@ -253,7 +291,13 @@ require_once('session_check.php');
         <!-- Chart.js Datalabels CDN -->
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
-
+        <script type="text/javascript">
+            function logoutConfirmation() {
+                if (confirm("Are you sure you want to logout?")) {
+                    window.location.href = "logout.php";
+                }
+            }
+        </script>
 
         <script type="text/javascript">
             $(document).ready(function () {

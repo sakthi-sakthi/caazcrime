@@ -3,7 +3,7 @@ require_once('includes/db.php');
 
 if (isset($mysqli, $_POST['submit'])) {
 	$username = mysqli_real_escape_string($mysqli, $_POST['username']);
-	$password = mysqli_real_escape_string($mysqli, $_POST['password']);
+	$password = md5(mysqli_real_escape_string($mysqli, $_POST['password']));
 
 	$query1 = mysqli_query($mysqli, "SELECT username, password, type, permission, name, surname, email FROM users WHERE username = '$username'");
 
@@ -32,7 +32,7 @@ if (isset($mysqli, $_POST['submit'])) {
 					die('Error updating OTP in the database: ' . mysqli_error($mysqli));
 				}
 				$url = 'https://api.sendinblue.com/v3/smtp/email';
-				$apiKey = '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';
+				$apiKey = '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';
 
 				$headers = array(
 					'Content-Type: application/json',
@@ -126,8 +126,12 @@ if (isset($mysqli, $_POST['submit'])) {
 				$result = curl_exec($ch);
 				curl_close($ch);
 
+				list($username, $domain) = explode('@', $db_email);
+				$halfLength = ceil(strlen($username) / 2);
+				$hiddenUsername = substr($username, 0, $halfLength) . 'xxxxxxx';
+				
 				echo '<script>';
-				echo 'alert("Email sent successfully. Please check your inbox for the OTP.");';
+				echo 'alert("Email sent successfully to ' . $hiddenUsername . '@' . $domain . '. Please check your inbox for the OTP.");';
 				echo 'var encodedOTP = btoa("' . $otp . '");';
 				echo 'window.location.href = "otp_verify.php?otp=" + encodedOTP;';
 				echo '</script>';

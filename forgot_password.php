@@ -1,6 +1,5 @@
 <?php
 require_once('includes/db.php');
-require_once('session_check.php');
 
 if (isset($mysqli, $_POST['submit'])) {
     $email = mysqli_real_escape_string($mysqli, $_POST['email']);
@@ -20,7 +19,7 @@ if (isset($mysqli, $_POST['submit'])) {
 
     if ($numRows > 0) {
         $url = 'https://api.sendinblue.com/v3/smtp/email';
-        $apiKey = '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';
+        $apiKey = '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';
 
         $headers = array(
             'Content-Type: application/json',

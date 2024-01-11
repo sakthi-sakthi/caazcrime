@@ -29,7 +29,7 @@ $eprow = mysqli_fetch_array($sqlE);
         <!-- Sidebar Holder -->
         <nav id="sidebar" class="sammacmedia">
             <div class="sidebar-header">
-                <h3>CAAZ SMS</h3>
+                <h3>CAT GENIUS</h3>
                 <strong>SMS</strong>
             </div>
 
@@ -48,7 +48,7 @@ $eprow = mysqli_fetch_array($sqlE);
                     <li>
                         <a href="a_employees.php">
                             <i class="fa fa-plus"></i>
-                            Add Criminials
+                            Add Criminals
                         </a>
 
                     </li>
@@ -56,7 +56,7 @@ $eprow = mysqli_fetch_array($sqlE);
                 <li>
                     <a href="all_employees.php">
                         <i class="fa fa-table"></i>
-                        All Criminials
+                        All Criminals
                     </a>
                 </li>
                 <li>
@@ -66,27 +66,44 @@ $eprow = mysqli_fetch_array($sqlE);
                     </a>
                 </li>
                 <li>
-                    <a href="invest.php">
-                        <i class="fa fa-link"></i>
-                        Report Issues
+                    <a href="criminalsearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Criminals
+                    </a>
+                </li>
+                <li>
+                    <a href="addcases.php">
+                        <i class="fa fa-plus"></i>
+                        Add Cases
+                    </a>
+
+                </li>
+                <li>
+                    <a href="allcases.php">
+                        <i class="fa fa-book"></i>
+                        All Cases
+                    </a>
+                </li>
+                <li>
+                    <a href="casesearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Cases
+                    </a>
+                </li>
+                <li>
+                    <a href="caseratio.php">
+                        <i class="fa fa-bar-chart-o"></i>
+                        Case Ratio Chart
+                    </a>
+                </li>
+                <li>
+                    <a href="casetracker.php">
+                        <i class="fa fa-search"></i>
+                        Find all Cases
                     </a>
                 </li>
                 <?php
-                if ($_SESSION['permission'] == 1 or $_SESSION['permission'] == 2) {
-
-
-                    ?>
-                    <li>
-                        <a href="v_issue.php">
-                            <i class="fa fa-table"></i>
-                            View Issues
-                        </a>
-                    </li>
-                <?php } ?>
-                <?php
-                if ($_SESSION['permission'] == 1 or $_SESSION['permission'] == 2) {
-
-
+                if ($_SESSION['permission'] == 1) {
                     ?>
                     <li>
                         <a href="a_users.php">
@@ -108,7 +125,7 @@ $eprow = mysqli_fetch_array($sqlE);
                     </a>
                 </li>
                 <li>
-                    <a href="logout.php">
+                    <a href="#" onclick="logoutConfirmation()">
                         <i class="fa fa-power-off"></i>
                         Logout
                     </a>
@@ -137,10 +154,11 @@ $eprow = mysqli_fetch_array($sqlE);
 
                     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                         <ul class="nav navbar-nav navbar-right  makotasamuel">
-                            <li><a href="#">
+                            <li><a href="#" style="color:white;">
                                     <?php require_once('includes/name.php'); ?>
                                 </a></li>
-                            <li><a href="logout.php"><i class="fa fa-power-off"> Logout</i></a></li>
+                            <li><a href="logout.php"><i class="fa fa-power-off" style="color:white;"> Logout</i></a>
+                            </li>
 
                         </ul>
                     </div>
@@ -243,8 +261,7 @@ $eprow = mysqli_fetch_array($sqlE);
                                     </div>
                                     <div class="col-lg-6">
                                         <label>Phone</label>
-                                        <input type="text" class="form-control" name="phone"
-                                            pattern="[2-2]{1,1}[6-6]{1,1}[3-3]{1,1}[7-7]{1,1}[1-9]{2,2}[0-9]{6,6}"
+                                        <input type="text" class="form-control" name="phone" maxlength="10"
                                             value="<?php echo $eprow['phone']; ?>" required>
                                     </div>
                                 </div>
@@ -332,6 +349,14 @@ $eprow = mysqli_fetch_array($sqlE);
     <script src="assets/js/jquery-1.10.2.js"></script>
     <!-- Bootstrap Js CDN -->
     <script src="assets/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript">
+        function logoutConfirmation() {
+            if (confirm("Are you sure you want to logout?")) {
+                window.location.href = "logout.php";
+            }
+        }
+    </script>
 
     <script type="text/javascript">
         $(document).ready(function () {

@@ -2,17 +2,37 @@
 require_once('includes/session.php');
 header("Access-Control-Allow-Origin: *");
 require_once('includes/conn.php');
+if (isset($_GET['idx']) && is_numeric($_GET['idx']) && isset($_GET['status'])) {
+    $id = $_GET['idx'];
+    $status = $_GET['status'];
+
+    if ($stmt = $mysqli->prepare("UPDATE cases SET status = ? WHERE id = ?")) {
+        $stmt->bind_param("si", $status, $id);
+        $stmt->execute();
+        $stmt->close();
+        $_SESSION['update_success'] = 'Case status updated successfully';
+        header("Location: allcases.php");
+        exit();
+    } else {
+        $_SESSION['update_error'] = 'Failed to update case status';
+        header("Location: allcases.php");
+        exit();
+    }
+}
 
 if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
     $id = $_GET['idx'];
-    if ($stmt = $mysqli->prepare("DELETE FROM employees WHERE id = ? LIMIT 1")) {
+    if ($stmt = $mysqli->prepare("DELETE FROM cases WHERE id = ? LIMIT 1")) {
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $stmt->close();
         $_SESSION['delete_success'] = 'Record successfully deleted';
-        header("Location: all_employees.php");
+        header("Location: allcases.php");
         exit();
     } else {
+        $_SESSION['delete_error'] = 'Failed to delete record';
+        header("Location: allcases.php");
+        exit();
     }
 }
 ?>
@@ -35,10 +55,6 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
     <link rel="stylesheet" href="vendors/datatables/datatables.min.css">
     <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <!-- Toastr JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
 
 </head>
 
@@ -74,7 +90,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
 
                     </li>
                 <?php } ?>
-                <li class="active">
+                <li>
                     <a href="all_employees.php">
                         <i class="fa fa-table"></i>
                         All Criminals
@@ -99,7 +115,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                     </a>
 
                 </li>
-                <li>
+                <li class="active">
                     <a href="allcases.php">
                         <i class="fa fa-book"></i>
                         All Cases
@@ -152,7 +168,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                     </a>
                 </li>
             </ul>
-        </nav>s
+        </nav>
 
         <!-- Page Content Holder -->
         <div id="content">
@@ -194,33 +210,43 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 </button>
                 <br />
                 <br />
-                <div class="panel-heading">All Criminials Record</div>
+                <div class="panel-heading">All Cases Record</div>
                 <div class="panel-body">
                     <table class="table table-striped thead-dark table-bordered table-hover" id="myTable">
                         <thead>
                             <tr>
                                 <th> <input type="checkbox" id="selectAllCheckbox"> All</th>
-                                <th>Criminal ID</th>
-                                <th>Name</th>
+                                <th>Case ID</th>
+                                <th>Complainant Name</th>
                                 <th style="display: none;" class="hidden">DOB</th>
-                                <th>Email</th>
                                 <th>Phone</th>
-                                <th style="display: none;" class="hidden">Father Name</th>
-                                <th style="display: none;" class="hidden">Mother Name</th>
-                                <th style="display: none;" class="hidden">Place</th>
                                 <th>Address</th>
-                                <th style="display: none;" class="hidden">Gender</th>
-                                <th>Description</th>
-                                <th>Action</th>
+                                <th style="display: none;" class="hidden">Location</th>
+                                <th style="display: none;" class="hidden">Incident</th>
+                                <th style="display: none;" class="hidden">Witness</th>
+                                <th style="display: none;" class="hidden">Evidence</th>
+                                <th style="display: none;" class="hidden">Reporting Officer</th>
+                                <th style="display: none;" class="hidden">Case Status</th>
+                                <th style="display: none;" class="hidden">Additional Contacts</th>
+                                <th style="display: none;" class="hidden">Case Priority</th>
+                                <th style="display: none;" class="hidden">Description</th>
+                                <th style="display: none;" class="hidden">City</th>
+                                <th style="display: none;" class="hidden">State</th>
+                                <th style="display: none;" class="hidden">Country</th>
+                                <th>Criminal Name</th>
+                                <th>Criminal Details</th>
+                                <th>Criminal Identity</th>
+                                <th>Case Status</th>
+                                <th>Actions</th>
                             </tr>
 
                         </thead>
 
                         <?php
                         $a = 1;
-                        $query = mysqli_query($mysqli, "select *from `employees` ");
+                        $query = mysqli_query($mysqli, "select *from `cases` ");
                         while ($row = mysqli_fetch_array($query)) {
-                            $originalDate = $row['dateofbirth'];
+                            $originalDate = $row['dob'];
                             $newDate = date("d-m-Y", strtotime($originalDate));
                             ?>
                             <tr>
@@ -230,7 +256,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                                 </td>
 
                                 <td>
-                                    <?php echo $row['employee_id']; ?>
+                                    <?php echo $row['case_id']; ?>
                                 </td>
                                 <td>
                                     <?php echo $row['name']; ?>
@@ -239,42 +265,74 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                                     <?php echo $newDate; ?>
                                 </td>
                                 <td>
-                                    <?php echo $row['email']; ?>
-                                </td>
-                                <td>
                                     <?php echo $row['phone']; ?>
-                                </td>
-                                <td style="display: none;" class="hidden">
-                                    <?php echo $row['father']; ?>
-                                </td>
-                                <td style="display: none;" class="hidden">
-                                    <?php echo $row['mother']; ?>
-                                </td>
-                                <td style="display: none;" class="hidden">
-                                    <?php echo $row['place']; ?>
                                 </td>
                                 <td>
                                     <?php echo $row['address']; ?>
                                 </td>
                                 <td style="display: none;" class="hidden">
-                                    <?php echo $row['gender']; ?>
+                                    <?php echo $row['location']; ?>
                                 </td>
-                                <td>
+                                <td style="display: none;" class="hidden">
+                                    <?php echo $row['incident']; ?>
+                                </td>
+                                <td style="display: none;" class="hidden">
+                                    <?php echo $row['witness']; ?>
+                                </td>
+                                <td style="display: none;" class="hidden">
+                                    <?php echo $row['evidence']; ?>
+                                </td>
+                                <td style="display: none;" class="hidden">
+                                    <?php echo $row['officer']; ?>
+                                </td>
+                                <td style="display: none;" class="hidden">
+                                    <?php echo $row['status']; ?>
+                                </td>
+                                <td style="display: none;" class="hidden">
+                                    <?php echo $row['addcontact']; ?>
+                                </td>
+                                <td style="display: none;" class="hidden">
+                                    <?php echo $row['priority']; ?>
+                                </td>
+                                <td style="display: none;" class="hidden">
                                     <?php echo $row['description']; ?>
                                 </td>
+                                <td style="display: none;" class="hidden">
+                                    <?php echo $row['city']; ?>
+                                </td>
+                                <td style="display: none;" class="hidden">
+                                    <?php echo $row['state']; ?>
+                                </td>
+                                <td style="display: none;" class="hidden">
+                                    <?php echo $row['country']; ?>
+                                </td>
                                 <td>
-                                    <a href="#samstrover<?php echo $row['id']; ?>" data-toggle="modal"
-                                        class="btn btn-warning edit-btn">
-                                        <span class="fa fa-eye"></span>
-                                    </a>
+                                    <?php echo $row['criminalname']; ?>
+                                </td>
+                                <td>
+                                    <?php echo $row['criminaldetails']; ?>
+                                </td>
+                                <td>
+                                    <?php echo $row['criminalidentity']; ?>
+                                </td>
+                                <td>
+                                    <?php echo $row['status']; ?>
+                                </td>
+                                <td>
                                     <?php
+                                    $caseId = $row['id'];
+                                    $caseStatus = $row['status'];
+                                    if ($caseStatus == 'open') {
+                                        echo '<button onclick="updateCaseStatus(' . $caseId . ', \'close\')" class="btn btn-warning">Close Case</button>';
+                                    } elseif ($caseStatus == 'close') {
+                                        echo '<button onclick="updateCaseStatus(' . $caseId . ', \'open\')" class="btn btn-success">Reopen Case</button>';
+                                    }
                                     if ($_SESSION['permission'] == 1) {
-                                        ?>
-                                        ||
-                                        <a href="#" onclick="confirmDelete(<?php echo $row['id']; ?>)" class="btn btn-danger">
-                                            <span class="fa fa-times"></span>
-                                        </a>
-                                    <?php } ?>
+                                        echo '&nbsp;&nbsp;&nbsp;<a href="#" onclick="confirmDelete(' . $caseId . ')" class="btn btn-danger">
+                                                    <span class="fa fa-times"></span>
+                                                </a>';
+                                    }
+                                    ?>
                                 </td>
                             </tr>
 
@@ -339,6 +397,38 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
     <script src="vendors/datatables/datatables.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        function updateCaseStatus(caseId, status) {
+            var confirmUpdate = confirm("Are you sure you want to " + status + " this case?");
+
+            if (confirmUpdate) {
+                $.ajax({
+                    url: 'allcases.php',
+                    type: 'GET',
+                    data: { idx: caseId, status: status },
+                    success: function (response) {
+                        if (status === 'open') {
+                            toastr.success('Case is open');
+                        } else if (status === 'close') {
+                            toastr.warning('Case is closed');
+                        } else if (status === 'reopen') {
+                            toastr.success('Case is reopened');
+                        }
+                        setTimeout(function () {
+                            location.reload();
+                        }, 800);
+                    },
+                    error: function (error) {
+                    }
+                });
+            }
+        }
+
+
+    </script>
+
     <script type="text/javascript">
         function logoutConfirmation() {
             if (confirm("Are you sure you want to logout?")) {
@@ -351,7 +441,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
             var confirmDelete = confirm("Are you sure you want to delete this record?");
 
             if (confirmDelete) {
-                window.location.href = 'all_employees.php?idx=' + id;
+                window.location.href = 'allcases.php?idx=' + id;
             }
         }
 
@@ -360,6 +450,8 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
             <?php unset($_SESSION['delete_success']); ?>
         <?php endif; ?>
     </script>
+    <script src="https://unpkg.com/pdfkit"></script>
+    <script src="https://unpkg.com/jspdf-signature-pad"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             $('#selectAllCheckbox').click(function () {
@@ -378,17 +470,26 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 var selectedRecords = [];
                 $('.record-checkbox:checked').each(function () {
                     selectedRecords.push({
-                        employee_id: $(this).closest('tr').find('td:eq(1)').text().trim(),
+                        case_id: $(this).closest('tr').find('td:eq(1)').text().trim(),
                         name: $(this).closest('tr').find('td:eq(2)').text().trim(),
                         dob: $(this).closest('tr').find('td:eq(3)').text().trim(),
-                        email: $(this).closest('tr').find('td:eq(4)').text().trim(),
-                        phone: $(this).closest('tr').find('td:eq(5)').text().trim(),
-                        fatherName: $(this).closest('tr').find('td:eq(6)').text().trim(),
-                        motherName: $(this).closest('tr').find('td:eq(7)').text().trim(),
-                        place: $(this).closest('tr').find('td:eq(8)').text().trim(),
-                        address: $(this).closest('tr').find('td:eq(9)').text().trim(),
-                        gender: $(this).closest('tr').find('td:eq(10)').text().trim(),
-                        description: $(this).closest('tr').find('td:eq(11)').text().trim()
+                        phone: $(this).closest('tr').find('td:eq(4)').text().trim(),
+                        address: $(this).closest('tr').find('td:eq(5)').text().trim(),
+                        location: $(this).closest('tr').find('td:eq(6)').text().trim(),
+                        incident: $(this).closest('tr').find('td:eq(7)').text().trim(),
+                        witness: $(this).closest('tr').find('td:eq(8)').text().trim(),
+                        evidence: $(this).closest('tr').find('td:eq(9)').text().trim(),
+                        officer: $(this).closest('tr').find('td:eq(10)').text().trim(),
+                        status: $(this).closest('tr').find('td:eq(11)').text().trim(),
+                        addcontact: $(this).closest('tr').find('td:eq(12)').text().trim(),
+                        priority: $(this).closest('tr').find('td:eq(13)').text().trim(),
+                        description: $(this).closest('tr').find('td:eq(14)').text().trim(),
+                        city: $(this).closest('tr').find('td:eq(15)').text().trim(),
+                        state: $(this).closest('tr').find('td:eq(16)').text().trim(),
+                        country: $(this).closest('tr').find('td:eq(17)').text().trim(),
+                        criminalname: $(this).closest('tr').find('td:eq(18)').text().trim(),
+                        criminaldetails: $(this).closest('tr').find('td:eq(19)').text().trim(),
+                        criminalidentity: $(this).closest('tr').find('td:eq(20)').text().trim()
                     });
                 });
 
@@ -400,13 +501,13 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 $('#downloadBtn').html('<i class="fa fa-spinner fa-spin"></i>&nbsp;&nbsp;Processing...');
 
                 var pdf = new jsPDF({
-                    orientation: 'portrait',
+                    orientation: 'landscape',
                     unit: 'mm',
-                    format: 'a4'
+                    format: 'a3'
                 });
 
                 var yOffset = 30;
-                var recordHeight = 250; // Adjust the height as needed
+                var recordHeight = 400;
                 var pageHeight = pdf.internal.pageSize.height * (recordHeight / 100);
 
 
@@ -416,16 +517,28 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                     }
                     addGrid(pdf, record, yOffset);
                 });
+
                 for (var i = 0; i < pdf.getNumberOfPages(); i++) {
                     pdf.setPage(i + 1);
                     pdf.setDrawColor(0);
                     pdf.setLineWidth(0.5);
                     pdf.rect(5, 5, pdf.internal.pageSize.width - 10, pdf.internal.pageSize.height - 10);
                 }
+
                 pdf.setPage(pdf.getNumberOfPages());
                 pdf.setFontSize(15);
-                pdf.text(15, pdf.internal.pageSize.height - 10, '© Cat Genius Security, ' + new Date().toLocaleDateString('en-GB'));
-                pdf.save('Selected-Records.pdf');
+                var textWidth = pdf.getStringUnitWidth('© Cat Genius Security, ' + new Date().toLocaleDateString('en-GB')) * 15 / pdf.internal.scaleFactor;
+                var centerPosition = (pdf.internal.pageSize.width - textWidth) / 2;
+                pdf.text(centerPosition, pdf.internal.pageSize.height - 10, '© Cat Genius Security, ' + new Date().toLocaleDateString('en-GB'));
+                var currentDate = new Date();
+                var formattedDate = currentDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                var formattedTime = currentDate.toLocaleTimeString();
+                var reportingOfficerName = getReportingOfficerName();
+                var signatureImage = captureSignature(reportingOfficerName);
+                var issueDetails = `Issued on: ${formattedDate} at ${formattedTime}\nPlace: Crime Data Office`;
+                pdf.text(30, pdf.internal.pageSize.height - 30, issueDetails);
+                pdf.text(30, pdf.internal.pageSize.height - 20, '\nDigital Signature: ' + reportingOfficerName);
+                pdf.save('Case-Records.pdf');
                 $('.record-checkbox').prop('checked', false);
                 $('#selectAllCheckbox').prop('checked', false);
                 $('#downloadBtn').html('<i class="fa fa-check"></i>&nbsp;&nbsp;Print Success');
@@ -433,21 +546,35 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 setTimeout(function () {
                     $('#downloadBtn').html('<i class="fa fa-download"></i>&nbsp;&nbsp;Print Records');
                 }, 3000);
+                function getReportingOfficerName() {
+                    return $('.record-checkbox:checked').first().closest('tr').find('td:eq(10)').text().trim();
+                }
+
+                function captureSignature(officerName) {
+                    var canvas = document.createElement('canvas');
+                    var context = canvas.getContext('2d');
+                    context.font = '12px Arial';
+                    context.fillText(officerName, 0, 10);
+
+                    var dataUrl = canvas.toDataURL('image/jpeg');
+                    return dataUrl;
+                }
+
             });
 
             function addGrid(pdf, record, yOffset) {
-                var xOffsetLeft = 10;
-                var xOffsetRight = 70;
-                var fontSize = 15;
+                var xOffsetLeft = 30;
+                var xOffsetRight = 90;
+                var fontSize = 16;
                 var pageWidth = pdf.internal.pageSize.width;
-                var headerTitleWidth = pdf.getStringUnitWidth('Criminal Record Informations') * 25 / pdf.internal.scaleFactor;
+                var headerTitleWidth = pdf.getStringUnitWidth('Guardians Ledger - Case Record Informations') * 25 / pdf.internal.scaleFactor;
                 var titleXOffset = (pageWidth - headerTitleWidth) / 2;
-                var tableWidth = 180;
+                var tableWidth = 380;
                 var tableXCenter = pdf.internal.pageSize.width / 2 - tableWidth / 2;
                 pdf.setFont("bold");
-                pdf.setFontSize(25);
+                pdf.setFontSize(27);
                 pdf.setTextColor(0, 102, 204);
-                pdf.text(titleXOffset, 20, 'Criminal Record Information');
+                pdf.text(titleXOffset, 20, 'Guardians Ledger - Case Record Informations');
                 pdf.setFont("normal");
                 pdf.setFontSize(fontSize);
                 const headerColor = [0, 102, 204];
@@ -462,17 +589,26 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 pdf.setFont("normal");
                 pdf.setFontSize(fontSize);
                 const rowData = [
-                    ['Criminal ID', record.employee_id],
-                    ['Criminal Name', record.name],
-                    ['DOB', record.dob],
-                    ['Email', record.email],
+                    ['Case ID', record.case_id],
+                    ['Complainant Name', record.name],
+                    ['Date of Birth', record.dob],
                     ['Mobile', record.phone],
-                    ['Father Name', record.fatherName],
-                    ['Mother Name', record.motherName],
                     ['Address', record.address],
-                    ['Place', record.place],
-                    ['Gender', record.gender],
-                    ['Description', record.description]
+                    ['Incident Location', record.location],
+                    ['Type of Incident', record.incident],
+                    ['Witness Information', record.witness],
+                    ['Evidence', record.evidence],
+                    ['Reporting Officer', record.officer],
+                    ['Case Status', record.status],
+                    ['Additional Contacts', record.addcontact],
+                    ['Priority Level', record.priority],
+                    ['Description', record.description],
+                    ['Incident City', record.city],
+                    ['Incident State', record.state],
+                    ['Country', record.country],
+                    ['Criminal Name', record.criminalname],
+                    ['Criminal Details', record.criminaldetails],
+                    ['Criminal Identity', record.criminalidentity],
                 ];
 
                 rowData.forEach((row, index) => {

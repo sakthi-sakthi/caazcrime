@@ -65,23 +65,17 @@ require_once('includes/conn.php');
                     </a>
                 </li>
                 <li>
-                    <a href="invest.php">
-                        <i class="fa fa-link"></i>
-                        Report Issues
+                    <a href="criminalsearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Criminals
                     </a>
                 </li>
-                <?php
-                if ($_SESSION['permission'] == 1 or $_SESSION['permission'] == 2) {
-
-
-                    ?>
-                    <li class="active">
-                        <a href="v_issue.php">
-                            <i class="fa fa-table"></i>
-                            View Issues
-                        </a>
-                    </li>
-                <?php } ?>
+                <li>
+                    <a href="casesearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Cases
+                    </a>
+                </li>
                 <?php
                 if ($_SESSION['permission'] == 1 or $_SESSION['permission'] == 2) {
 
@@ -107,7 +101,7 @@ require_once('includes/conn.php');
                     </a>
                 </li>
                 <li>
-                    <a href="logout.php">
+                    <a href="#" onclick="logoutConfirmation()">
                         <i class="fa fa-power-off"></i>
                         Logout
                     </a>
@@ -263,6 +257,13 @@ require_once('includes/conn.php');
     <script src="assets/js/jquery-1.10.2.js"></script>
     <script src="assets/js/bootstrap.min.js"></script>
     <script src="vendors/datatables/datatables.min.js"></script>
+    <script type="text/javascript">
+        function logoutConfirmation() {
+            if (confirm("Are you sure you want to logout?")) {
+                window.location.href = "logout.php";
+            }
+        }
+    </script>
     <script type="text/javascript">
         $(document).ready(function () {
             $('#sidebarCollapse').on('click', function () {

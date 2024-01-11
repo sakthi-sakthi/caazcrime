@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
 <div class="modal fade" id="samstrover<?php echo $row['id']; ?>" tabindex="-1" role="dialog"
     aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -7,7 +8,16 @@
                 <center>
                     <h4 class="modal-title" id="myModalLabel">Criminal Information</h4>
                 </center>
+                <?php
+                if ($_SESSION['permission'] == 1) {
+                    ?>
+                    <button type="button" class="btn btn-primary edit-btn"
+                        data-target="#samstrover<?php echo $row['id']; ?>">
+                        Edit
+                    </button>
+                <?php } ?>
             </div>
+
             <?php
             $pro = mysqli_query($mysqli, "select * from employees where id='" . $row['id'] . "'");
             $prow = mysqli_fetch_array($pro);
@@ -26,9 +36,9 @@
                 </div>
                 <div class="col-md-4"></div>
             </div>
-            <form>
+            <form id="criminalForm">
+                <input type="hidden" name="id" value="<?php echo $prow['id']; ?>">
                 <div class="modal-body">
-
 
                     <div class="row">
                         <div class="col-md-6">
@@ -93,9 +103,61 @@
                         </div>
                     </div>
                     <div class="line"></div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success" id="updateButton"
+                            style="display: none;">Update</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
                 </div>
-
             </form>
         </div>
     </div>
 </div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var modalId;
+
+        $(".edit-btn").off("click").on("click", function () {
+            modalId = $(this).attr("data-target");
+            $(modalId + " input[readonly]").prop("readonly", false);
+            $(modalId + " #updateButton").show();
+        });
+
+        $("#criminalForm").off("submit").on("submit", function (event) {
+            event.preventDefault();
+            var formData = $(this).serialize();
+
+            $.ajax({
+                type: "POST",
+                url: "criminalupdatecode.php",
+                data: formData,
+                dataType: "json",
+                success: function (response) {
+                    console.log(response);
+                    $(modalId).modal("hide");
+
+                    if (response.status === 'success') {
+                        toastr.success('Record updated successfully');
+                    } else {
+                        toastr.error('Failed to update record');
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                    toastr.error('Failed to update record');
+                },
+                complete: function () {
+                    setTimeout(function () {
+                        window.location.reload(true);
+                    }, 1000);
+                }
+            });
+        });
+    });
+</script>

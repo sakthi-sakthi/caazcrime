@@ -1,6 +1,36 @@
-<?php require_once('includes/session.php');
+<?php
+require_once('includes/session.php');
 require_once('includes/conn.php');
+
+function getCrimeCountByDate($groupBy)
+{
+    global $mysqli;
+
+    $sql = "SELECT DATE_FORMAT(STR_TO_DATE(joined, '%d %b %Y'), '$groupBy') as period, COUNT(*) as count FROM cases GROUP BY period";
+    $result = mysqli_query($mysqli, $sql);
+
+    $data = array();
+    while ($row = mysqli_fetch_assoc($result)) {
+        $data[$row['period']] = $row['count'];
+    }
+
+    return $data;
+}
+
+// Fetch data for year-wise, month-wise, and date-wise
+$yearlyCrimeData = getCrimeCountByDate('%Y');
+$monthlyCrimeData = getCrimeCountByDate('%Y-%m');
+$datewiseCrimeData = getCrimeCountByDate('%Y-%m-%d');
+
+$yearlyPeriodNames = array_keys($yearlyCrimeData);
+$monthlyPeriodNames = array_keys($monthlyCrimeData);
+$datewisePeriodNames = array_keys($datewiseCrimeData);
 ?>
+
+
+
+<!-- rest of your HTML and JavaScript code -->
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -17,7 +47,6 @@ require_once('includes/conn.php');
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/awesome/font-awesome.css">
     <link rel="stylesheet" href="assets/css/animate.css">
-    <link rel="stylesheet" href="vendors/datatables/datatables.min.css">
 </head>
 
 <body>
@@ -83,14 +112,13 @@ require_once('includes/conn.php');
                         All Cases
                     </a>
                 </li>
-
                 <li>
                     <a href="casesearch.php">
                         <i class="fa fa-search"></i>
                         Search Cases
                     </a>
                 </li>
-                <li>
+                <li class="active">
                     <a href="caseratio.php">
                         <i class="fa fa-bar-chart-o"></i>
                         Case Ratio Chart
@@ -111,7 +139,7 @@ require_once('includes/conn.php');
                             Add Users
                         </a>
                     </li>
-                    <li class="active">
+                    <li>
                         <a href="v_users.php">
                             <i class="fa fa-table"></i>
                             View Users
@@ -140,7 +168,6 @@ require_once('includes/conn.php');
                 <img src="assets/image/ssm.jpg" class="img-thumbnail">
             </div>
 
-
             <nav class="navbar navbar-default sammacmedia">
                 <div class="container-fluid">
 
@@ -165,101 +192,29 @@ require_once('includes/conn.php');
                 </div>
             </nav>
 
-            <div class="line"></div>
+            <br />
 
-            <div class="panel panel-default sammacmedia">
-                <div class="panel-heading">CAAZ SMS All Users</div>
-                <div class="panel-body">
-                    <table class="table table-striped thead-dark table-bordered table-hover" id="myTable">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Name</th>
-                                <th>Surname</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Access Level</th>
-                                <th>Action</th>
+            <h1 class="text-center">Case Report Statistics</h1>
+            <!-- Your existing HTML code -->
 
-
-
-                            </tr>
-                        </thead>
-                        <?php
-                        $a = 1;
-                        $query = mysqli_query($mysqli, "select *from `users` ");
-                        while ($row = mysqli_fetch_array($query)) {
-
-                            ?>
-                            <tr>
-                                <td>
-                                    <?php echo $a; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['name']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['surname']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['username']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['email']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['phone']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['permission']; ?>
-                                </td>
-                                <td>
-                                    <a href="v_users.php?edited=1&idx=<?php echo $row['id']; ?>" data-toggle="modal"
-                                        class="btn btn-danger"><span class="fa fa-times"></span> Remove</a>
-                                </td>
-                            </tr>
-                            <?php
-
-                            $a++;
-                        }
-
-
-
-                        if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
-                            $id = $_GET['idx'];
-                            if ($stmt = $mysqli->prepare("DELETE FROM users WHERE id = ? LIMIT 1")) {
-                                $stmt->bind_param("i", $id);
-                                $stmt->execute();
-                                $stmt->close();
-                                ?>
-                                <div class="alert alert-success strover" id="sams1">
-                                    <a href="#" class="close" data-dismiss="alert">&times;</a>
-                                    <strong> Successfully! </strong>
-                                    <?php echo 'Record Successfully deleted please refresh this page'; ?>
-                                </div>
-
-                                <?php
-                            } else {
-                                ?>
-                                <div class="alert alert-danger samuel" id="sams1">
-                                    <a href="#" class="close" data-dismiss="alert">&times;</a>
-                                    <strong> Danger! </strong>
-                                    <?php echo 'OOPS please try again something went wrong'; ?>
-                                </div>
-                                <?php
-                            }
-                            $mysqli->close();
-
-                        } else {
-
-                        }
-                        ?>
-
-
-                    </table>
+            <!-- Chart Row -->
+            <div class="row">
+                <!-- Pie Chart Column -->
+                <div class="col-md-4">
+                    <canvas id="monthlyChart" width="200" height="100"></canvas>
                 </div>
+
+                <!-- Bar Chart Column -->
+                <div class="col-md-4">
+                    <canvas id="yearlyChart" width="200" height="100"></canvas>
+                </div>
+
+                <div class="col-md-4">
+                    <canvas id="datewiseChart" width="200" height="100"></canvas>
+                </div>
+
             </div>
+
             <div class="line"></div>
             <footer>
                 <p class="text-center">
@@ -275,9 +230,17 @@ require_once('includes/conn.php');
 
 
 
+    <!-- jQuery CDN -->
     <script src="assets/js/jquery-1.10.2.js"></script>
+    <!-- Bootstrap Js CDN -->
     <script src="assets/js/bootstrap.min.js"></script>
-    <script src="vendors/datatables/datatables.min.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Your existing jQuery and Bootstrap code -->
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script type="text/javascript">
         function logoutConfirmation() {
             if (confirm("Are you sure you want to logout?")) {
@@ -285,6 +248,60 @@ require_once('includes/conn.php');
             }
         }
     </script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var yearlyData = {
+                labels: <?php echo json_encode($yearlyPeriodNames); ?>,
+                datasets: [{
+                    label: "Yearly Crime Count",
+                    backgroundColor: ["#3498db", "#2ecc71", "#e74c3c", "#f39c12"],
+                    data: <?php echo json_encode(array_values($yearlyCrimeData)); ?>,
+                    fill: true,
+                }],
+            };
+
+            var monthlyData = {
+                labels: <?php echo json_encode($monthlyPeriodNames); ?>,
+                datasets: [{
+                    label: "Monthly Crime Count",
+                    borderColor: ["#3498db", "#2ecc71", "#e74c3c", "#f39c12"],
+                    data: <?php echo json_encode(array_values($monthlyCrimeData)); ?>,
+                    fill: true,
+                }],
+            };
+
+            var datewiseData = {
+                labels: <?php echo json_encode($datewisePeriodNames); ?>,
+                datasets: [{
+                    label: "Date-wise Crime Count",
+                    borderColor: ["#3498db", "#2ecc71", "#e74c3c", "#f39c12"],
+                    data: <?php echo json_encode(array_values($datewiseCrimeData)); ?>,
+                    fill: true,
+                }],
+            };
+
+            var yearlyCtx = document.getElementById("yearlyChart").getContext("2d");
+            var monthlyCtx = document.getElementById("monthlyChart").getContext("2d");
+            var datewiseCtx = document.getElementById("datewiseChart").getContext("2d");
+
+            var yearlyChart = new Chart(yearlyCtx, {
+                type: 'bar',
+                data: yearlyData,
+            });
+
+            var monthlyChart = new Chart(monthlyCtx, {
+                type: 'line',
+                data: monthlyData,
+            });
+
+            var datewiseChart = new Chart(datewiseCtx, {
+                type: 'line',
+                data: datewiseData,
+            });
+        });
+    </script>
+
 
     <script type="text/javascript">
         $(document).ready(function () {
@@ -306,12 +323,6 @@ require_once('includes/conn.php');
                 });
             }, 5000);
 
-        });
-    </script>
-    <script type="text/javascript">
-
-        $(document).ready(function () {
-            $('#myTable').DataTable();
         });
     </script>
 </body>

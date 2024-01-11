@@ -1,21 +1,56 @@
 <?php
+$mysqli = new mysqli('localhost', 'root', '', 'caaz');
 require_once('includes/session.php');
-header("Access-Control-Allow-Origin: *");
-require_once('includes/conn.php');
+require_once('check.php');
+require_once('session_check.php');
+if ($mysqli->connect_error) {
+    die("Connection failed: " . $mysqli->connect_error);
+}
+$criminalIds = getCrimeIds(); // Assuming you have a function to fetch criminal IDs
 
-if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
-    $id = $_GET['idx'];
-    if ($stmt = $mysqli->prepare("DELETE FROM employees WHERE id = ? LIMIT 1")) {
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $stmt->close();
-        $_SESSION['delete_success'] = 'Record successfully deleted';
-        header("Location: all_employees.php");
-        exit();
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $searchById = $_POST['searchById'];
+    $searchByNumber = $_POST['searchByNumber'];
+    $searchByName = $_POST['searchByName'];
+    $searchByDateOfBirth = $_POST['searchByDateOfBirth'];
+
+    if (!empty($searchById)) {
+        $query = "SELECT * FROM employees WHERE employee_id = ?";
+        $searchInput = $searchById;
+    } elseif (!empty($searchByNumber)) {
+        $query = "SELECT * FROM employees WHERE phone = ?";
+        $searchInput = $searchByNumber;
+    } elseif (!empty($searchByName)) {
+        $query = "SELECT * FROM employees WHERE name LIKE ?";
+        $searchInput = '%' . $searchByName . '%';
+    } elseif (!empty($searchByDateOfBirth)) {
+        $searchByDateOfBirth = DateTime::createFromFormat('d-m-Y', $searchByDateOfBirth)->format('Y-m-d');
+        $query = "SELECT * FROM employees WHERE dateofbirth = ?";
+        $searchInput = $searchByDateOfBirth;
     } else {
+        echo "Please enter at least one search criterion.";
+        exit;
     }
+    $stmt = $mysqli->prepare($query);
+    $stmt->bind_param('s', $searchInput);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $results = $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getCrimeIds()
+{
+    global $mysqli;
+    $criminalIds = array();
+    $query = "SELECT DISTINCT employee_id FROM employees";
+    $result = $mysqli->query($query);
+    while ($row = $result->fetch_assoc()) {
+        $criminalIds[] = $row['employee_id'];
+    }
+    return $criminalIds;
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -24,7 +59,11 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>CAAZ | SECURITY - DASHBOARD</title>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <title>CAAZ | SECURITY - CRIMINAL SEARCH</title>
 
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
@@ -32,14 +71,10 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/awesome/font-awesome.css">
     <link rel="stylesheet" href="assets/css/animate.css">
-    <link rel="stylesheet" href="vendors/datatables/datatables.min.css">
     <!-- Toastr CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <!-- Toastr JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.0/css/datepicker.css" rel="stylesheet"
+        type="text/css" />
 </head>
 
 <body>
@@ -74,7 +109,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
 
                     </li>
                 <?php } ?>
-                <li class="active">
+                <li>
                     <a href="all_employees.php">
                         <i class="fa fa-table"></i>
                         All Criminals
@@ -86,7 +121,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                         Crime Ratio Chart
                     </a>
                 </li>
-                <li>
+                <li class="active">
                     <a href="criminalsearch.php">
                         <i class="fa fa-search"></i>
                         Search Criminals
@@ -152,7 +187,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                     </a>
                 </li>
             </ul>
-        </nav>s
+        </nav>
 
         <!-- Page Content Holder -->
         <div id="content">
@@ -160,6 +195,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
             <div clas="col-md-12">
                 <img src="assets/image/ssm.jpg" class="img-thumbnail">
             </div>
+
 
             <nav class="navbar navbar-default sammacmedia">
                 <div class="container-fluid">
@@ -185,144 +221,135 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 </div>
             </nav>
 
-            <br />
-
+            <div class="line"></div>
             <div class="panel panel-default sammacmedia">
                 <br />
-                <button id="downloadBtn" class="btn btn-primary" style="margin-left: 85%;padding:10px 10px 10px 10px;">
+                <button id="printBtn" class="btn btn-primary" style="margin-left: 85%;padding:10px 10px 10px 10px;">
                     <i class="fa fa-download"></i>&nbsp;&nbsp;&nbsp;Download PDF
                 </button>
                 <br />
                 <br />
-                <div class="panel-heading">All Criminials Record</div>
+                <div class="panel-heading">CAAZ Criminals Search</div>
                 <div class="panel-body">
-                    <table class="table table-striped thead-dark table-bordered table-hover" id="myTable">
-                        <thead>
-                            <tr>
-                                <th> <input type="checkbox" id="selectAllCheckbox"> All</th>
-                                <th>Criminal ID</th>
-                                <th>Name</th>
-                                <th style="display: none;" class="hidden">DOB</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th style="display: none;" class="hidden">Father Name</th>
-                                <th style="display: none;" class="hidden">Mother Name</th>
-                                <th style="display: none;" class="hidden">Place</th>
-                                <th>Address</th>
-                                <th style="display: none;" class="hidden">Gender</th>
-                                <th>Description</th>
-                                <th>Action</th>
-                            </tr>
-
-                        </thead>
-
-                        <?php
-                        $a = 1;
-                        $query = mysqli_query($mysqli, "select *from `employees` ");
-                        while ($row = mysqli_fetch_array($query)) {
-                            $originalDate = $row['dateofbirth'];
-                            $newDate = date("d-m-Y", strtotime($originalDate));
-                            ?>
-                            <tr>
-                                <td>
-                                    <input type="checkbox" class="record-checkbox"
-                                        data-record-id="<?php echo $row['id']; ?>">
-                                </td>
-
-                                <td>
-                                    <?php echo $row['employee_id']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['name']; ?>
-                                </td>
-                                <td style="display: none;" class="hidden">
-                                    <?php echo $newDate; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['email']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['phone']; ?>
-                                </td>
-                                <td style="display: none;" class="hidden">
-                                    <?php echo $row['father']; ?>
-                                </td>
-                                <td style="display: none;" class="hidden">
-                                    <?php echo $row['mother']; ?>
-                                </td>
-                                <td style="display: none;" class="hidden">
-                                    <?php echo $row['place']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['address']; ?>
-                                </td>
-                                <td style="display: none;" class="hidden">
-                                    <?php echo $row['gender']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $row['description']; ?>
-                                </td>
-                                <td>
-                                    <a href="#samstrover<?php echo $row['id']; ?>" data-toggle="modal"
-                                        class="btn btn-warning edit-btn">
-                                        <span class="fa fa-eye"></span>
-                                    </a>
-                                    <?php
-                                    if ($_SESSION['permission'] == 1) {
-                                        ?>
-                                        ||
-                                        <a href="#" onclick="confirmDelete(<?php echo $row['id']; ?>)" class="btn btn-danger">
-                                            <span class="fa fa-times"></span>
-                                        </a>
-                                    <?php } ?>
-                                </td>
-                            </tr>
-
-                            <?php
-                            require('userInfo.php');
-                            $a++;
-                        }
-
-
-
-                        if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
-                            $id = $_GET['idx'];
-                            if ($stmt = $mysqli->prepare("DELETE FROM employees WHERE id = ? LIMIT 1")) {
-                                $stmt->bind_param("i", $id);
-                                $stmt->execute();
-                                $stmt->close();
-                                ?>
-                                <?php
-                                if (isset($_SESSION['delete_success'])) {
-                                    echo '<div class="alert alert-success" id="sams1">
-                                                <a href="#" class="close" data-dismiss="alert">&times;</a>
-                                                <strong>Success! </strong>' . $_SESSION['delete_success'] . '
-                                            </div>';
-                                    unset($_SESSION['delete_success']); // Clear the session variable
-                                }
-                                ?>
-
-                                <?php
-                            } else {
-                                ?>
-                                <div class="alert alert-danger samuel" id="sams1">
-                                    <a href="#" class="close" data-dismiss="alert">&times;</a>
-                                    <strong> Danger! </strong>
-                                    <?php echo 'OOPS please try again something went wrong'; ?>
+                    <!-- Update the search form -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <form class="form-inline" method="POST" action="" id="searchForm"
+                                onsubmit="return validateSearchForm()" autocomplete="off">
+                                <div class="form-group">
+                                    <label for="searchById">Search by ID :&nbsp;&nbsp;&nbsp;</label>
+                                    <select class="form-control" id="searchById" name="searchById"
+                                        style="width: 200px;">
+                                        <option value="">Select Criminal ID</option>
+                                        <?php foreach ($criminalIds as $criminalId): ?>
+                                            <option value="<?php echo $criminalId; ?>">
+                                                <?php echo $criminalId; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
-                                <?php
-                            }
-                            $mysqli->close();
 
-                        } else {
+                                <div class="form-group">
+                                    <label for="searchByNumber">Search by Mobile :&nbsp;&nbsp;&nbsp;</label>
+                                    <input type="text" class="form-control" id="searchByNumber" name="searchByNumber"
+                                        placeholder="Enter mobile number" maxlength="10" style="width: 200px;">
+                                </div>
 
-                        }
-                        ?>
+                                <div class="form-group">
+                                    <label for="searchByName">Search by Name :&nbsp;&nbsp;&nbsp;</label>
+                                    <input type="text" class="form-control" id="searchByName" name="searchByName"
+                                        placeholder="Enter name" style="width: 200px;">
+                                </div>
 
+                                <div class="form-group">
+                                    <label for="searchByDateOfBirth">Search by DOB :&nbsp;&nbsp;&nbsp;</label>
+                                    <input type="text" class="form-control" id="searchByDateOfBirth"
+                                        name="searchByDateOfBirth" data-date-format="dd-mm-yyyy" autocomplete="off"
+                                        placeholder="DD-MM-YYYY" style="width: 200px;">
+                                </div>
 
-                    </table>
+                                <button type="submit" class="btn btn-primary" id="searchButton">Search</button>
+                                <button type="reset" class="btn btn-danger" id="resetButton">Reset</button>
+                            </form>
+
+                        </div>
+                    </div>
+
+                    <br />
+                    <div class="row">
+                        <div class="col-md-12">
+                            <?php if (isset($results) && !empty($results)): ?>
+                                <table class="table table-bordered" id="resultTable">
+                                    <thead>
+                                        <tr>
+                                            <th> <input type="checkbox" id="selectAllCheckbox"> All</th>
+                                            <th>Criminal ID</th>
+                                            <th>Criminal Name</th>
+                                            <th>Date of Birth</th>
+                                            <th>Phone</th>
+                                            <th>Email</th>
+                                            <th>Place</th>
+                                            <th>Address</th>
+                                            <th>Gender</th>
+                                            <th>Father</th>
+                                            <th>Mother</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($results as $row):
+                                            $originalDate = $row['dateofbirth'];
+                                            $newDate = date("d-m-Y", strtotime($originalDate)); ?>
+                                            <tr>
+                                                <td>
+                                                    <input type="checkbox" class="record-checkbox"
+                                                        data-record-id="<?php echo $row['id']; ?>">
+                                                </td>
+                                                <td>
+                                                    <?php echo $row['employee_id']; ?>
+                                                </td>
+                                                <td>
+                                                    <?php echo $row['name']; ?>
+                                                </td>
+                                                <td>
+                                                    <?php echo $newDate; ?>
+                                                </td>
+                                                <td>
+                                                    <?php echo $row['phone']; ?>
+                                                </td>
+                                                <td>
+                                                    <?php echo $row['email']; ?>
+                                                </td>
+                                                <td>
+                                                    <?php echo $row['place']; ?>
+                                                </td>
+                                                <td>
+                                                    <?php echo $row['address']; ?>
+                                                </td>
+                                                <td>
+                                                    <?php echo $row['gender']; ?>
+                                                </td>
+                                                <td>
+                                                    <?php echo $row['father']; ?>
+                                                </td>
+                                                <td>
+                                                    <?php echo $row['mother']; ?>
+                                                </td>
+                                                <td>
+                                                    <?php echo $row['description']; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            <?php else: ?>
+                                <p style="color:black;text-align:center;"><b>No results found</b></p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
             </div>
+
             <div class="line"></div>
             <footer>
                 <p class="text-center">
@@ -333,10 +360,14 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
         </div>
 
     </div>
-
+    <!-- jQuery CDN -->
     <script src="assets/js/jquery-1.10.2.js"></script>
+    <!-- Bootstrap Js CDN -->
     <script src="assets/js/bootstrap.min.js"></script>
-    <script src="vendors/datatables/datatables.min.js"></script>
+    <script src="vendors/ckeditor/sammacmedia.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.0/js/bootstrap-datepicker.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script type="text/javascript">
@@ -347,19 +378,15 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
         }
     </script>
     <script>
-        function confirmDelete(id) {
-            var confirmDelete = confirm("Are you sure you want to delete this record?");
+        $(function () {
+            $("#searchByDateOfBirth").datepicker({
+                autoclose: true,
+                todayHighlight: true
+            });
+        });
 
-            if (confirmDelete) {
-                window.location.href = 'all_employees.php?idx=' + id;
-            }
-        }
-
-        <?php if (isset($_SESSION['delete_success'])): ?>
-            toastr.success('<?php echo $_SESSION['delete_success']; ?>');
-            <?php unset($_SESSION['delete_success']); ?>
-        <?php endif; ?>
     </script>
+
     <script type="text/javascript">
         $(document).ready(function () {
             $('#selectAllCheckbox').click(function () {
@@ -374,7 +401,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                     $('#selectAllCheckbox').prop('checked', false);
                 }
             });
-            $('#downloadBtn').click(function () {
+            $('#printBtn').click(function () {
                 var selectedRecords = [];
                 $('.record-checkbox:checked').each(function () {
                     selectedRecords.push({
@@ -393,11 +420,11 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 });
 
                 if (selectedRecords.length === 0) {
-                    toastr.error('Please select at least one record to download.');
+                    toastr.error('Please select a record to download.');
                     return;
                 }
 
-                $('#downloadBtn').html('<i class="fa fa-spinner fa-spin"></i>&nbsp;&nbsp;Processing...');
+                $('#printBtn').html('<i class="fa fa-spinner fa-spin"></i>&nbsp;&nbsp;Processing...');
 
                 var pdf = new jsPDF({
                     orientation: 'portrait',
@@ -406,7 +433,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 });
 
                 var yOffset = 30;
-                var recordHeight = 250; // Adjust the height as needed
+                var recordHeight = 250;
                 var pageHeight = pdf.internal.pageSize.height * (recordHeight / 100);
 
 
@@ -428,10 +455,10 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 pdf.save('Selected-Records.pdf');
                 $('.record-checkbox').prop('checked', false);
                 $('#selectAllCheckbox').prop('checked', false);
-                $('#downloadBtn').html('<i class="fa fa-check"></i>&nbsp;&nbsp;Print Success');
+                $('#printBtn').html('<i class="fa fa-check"></i>&nbsp;&nbsp;Print Success');
                 toastr.success('Print success');
                 setTimeout(function () {
-                    $('#downloadBtn').html('<i class="fa fa-download"></i>&nbsp;&nbsp;Print Records');
+                    $('#printBtn').html('<i class="fa fa-download"></i>&nbsp;&nbsp;Print Records');
                 }, 3000);
             });
 
@@ -440,7 +467,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 var xOffsetRight = 70;
                 var fontSize = 15;
                 var pageWidth = pdf.internal.pageSize.width;
-                var headerTitleWidth = pdf.getStringUnitWidth('Criminal Record Informations') * 25 / pdf.internal.scaleFactor;
+                var headerTitleWidth = pdf.getStringUnitWidth('Criminal Personal Record Informations') * 25 / pdf.internal.scaleFactor;
                 var titleXOffset = (pageWidth - headerTitleWidth) / 2;
                 var tableWidth = 180;
                 var tableXCenter = pdf.internal.pageSize.width / 2 - tableWidth / 2;
@@ -462,7 +489,7 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
                 pdf.setFont("normal");
                 pdf.setFontSize(fontSize);
                 const rowData = [
-                    ['Criminal ID', record.employee_id],
+                    ['Criminal Id', record.employee_id],
                     ['Criminal Name', record.name],
                     ['DOB', record.dob],
                     ['Email', record.email],
@@ -489,15 +516,44 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
     </script>
 
     <script type="text/javascript">
+        function validateSearchForm() {
+            var searchById = document.getElementById('searchById').value;
+            var searchByNumber = document.getElementById('searchByNumber').value;
+            var searchByName = document.getElementById('searchByName').value;
+            var searchByDateOfBirth = document.getElementById('searchByDateOfBirth').value;
+
+            // Check if the print button triggered the form submission
+            var isPrintButton = ($('#printBtn').data('clicked') === true);
+
+            if (!isPrintButton && searchById === '' && searchByNumber === '' && searchByName === '' && searchByDateOfBirth === '') {
+                toastr.error('Please enter at least one search criteria.');
+                return false;
+            }
+            return true;
+        }
+
+    </script>
+    <script>
+        document.getElementById('resetButton').addEventListener('click', function (event) {
+            event.preventDefault();
+            document.getElementById('searchForm').reset();
+            document.getElementById('resultTable').innerHTML = ' <p style="color:black;text-align:center;"><b>No results found</b></p>';
+        });
+
+    </script>
+
+
+    <script type="text/javascript">
         $(document).ready(function () {
             $('#sidebarCollapse').on('click', function () {
                 $('#sidebar').toggleClass('active');
             });
         });
-
         $('sams').on('click', function () {
             $('makota').addClass('animated tada');
         });
+    </script>
+    <script type="text/javascript">
 
         $(document).ready(function () {
             window.setTimeout(function () {
@@ -507,9 +563,6 @@ if (isset($_GET['idx']) && is_numeric($_GET['idx'])) {
             }, 5000);
         });
 
-        $(document).ready(function () {
-            $('#myTable').DataTable();
-        });
     </script>
 </body>
 

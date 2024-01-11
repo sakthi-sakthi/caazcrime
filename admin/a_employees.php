@@ -68,23 +68,43 @@ require_once('includes/conn.php');
                     </a>
                 </li>
                 <li>
-                    <a href="invest.php">
-                        <i class="fa fa-link"></i>
-                        Report Issues
+                    <a href="criminalsearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Criminals
                     </a>
                 </li>
-                <?php
-                if ($_SESSION['permission'] == 1 or $_SESSION['permission'] == 2) {
+                <li>
+                    <a href="addcases.php">
+                        <i class="fa fa-plus"></i>
+                        Add Cases
+                    </a>
 
+                </li>
+                <li>
+                    <a href="allcases.php">
+                        <i class="fa fa-book"></i>
+                        All Cases
+                    </a>
+                </li>
 
-                    ?>
-                    <li>
-                        <a href="v_issue.php">
-                            <i class="fa fa-table"></i>
-                            View Issues
-                        </a>
-                    </li>
-                <?php } ?>
+                <li>
+                    <a href="casesearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Cases
+                    </a>
+                </li>
+                <li>
+                    <a href="caseratio.php">
+                        <i class="fa fa-bar-chart-o"></i>
+                        Case Ratio Chart
+                    </a>
+                </li>
+                <li>
+                    <a href="casetracker.php">
+                        <i class="fa fa-search"></i>
+                        Find all Cases
+                    </a>
+                </li>
                 <?php
                 if ($_SESSION['permission'] == 1) {
                     ?>
@@ -108,7 +128,7 @@ require_once('includes/conn.php');
                     </a>
                 </li>
                 <li>
-                    <a href="logout.php">
+                    <a href="#" onclick="logoutConfirmation()">
                         <i class="fa fa-power-off"></i>
                         Logout
                     </a>
@@ -123,6 +143,30 @@ require_once('includes/conn.php');
                 <img src="assets/image/ssm.jpg" class="img-thumbnail">
             </div>
 
+            <nav class="navbar navbar-default sammacmedia">
+                <div class="container-fluid">
+
+                    <div class="navbar-header" id="sams">
+                        <button type="button" id="sidebarCollapse" id="makota"
+                            class="btn btn-sam animated tada navbar-btn">
+                            <i class="glyphicon glyphicon-align-left"></i>
+                            <span>Menu</span>
+                        </button>
+                    </div>
+
+                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                        <ul class="nav navbar-nav navbar-right  makotasamuel">
+                            <li><a href="#" style="color:white;">
+                                    <?php require_once('includes/name.php'); ?>
+                                </a></li>
+                            <li><a href="logout.php"><i class="fa fa-power-off" style="color:white;"> Logout</i></a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
             <br />
 
             <?php
@@ -135,6 +179,8 @@ require_once('includes/conn.php');
                 $mother = mysqli_real_escape_string($mysqli, $_POST['mother']);
                 $place = mysqli_real_escape_string($mysqli, $_POST['place']);
                 $address = mysqli_real_escape_string($mysqli, $_POST['address']);
+                $previousCase = mysqli_real_escape_string($mysqli, $_POST['previousCase']);
+                $incident = mysqli_real_escape_string($mysqli, $_POST['incident']);
                 $description = mysqli_real_escape_string($mysqli, $_POST['description']);
                 $gender = mysqli_real_escape_string($mysqli, $_POST['gender']);
                 $joined = date(" d M Y ");
@@ -174,7 +220,7 @@ require_once('includes/conn.php');
                     <?php
                 } else {
 
-                    $sql = "INSERT INTO employees(name,dateofbirth,email,joined,gender,phone,father,mother,place,description,address,tmp,employee_id) VALUES ('$name','$date','$email','$joined','$gender','$phone','$father','$mother','$place','$description','$address','$tmp','$employee_id')";
+                    $sql = "INSERT INTO employees(name,dateofbirth,email,joined,gender,phone,father,mother,place,previousCase,incident,description,address,tmp,employee_id) VALUES ('$name','$date','$email','$joined','$gender','$phone','$father','$mother','$place','$previousCase','$incident','$description','$address','$tmp','$employee_id')";
                     $results = mysqli_query($mysqli, $sql);
                     if (in_array($fileActualExt, $allowed)) {
                         if ($fileError === 0) {
@@ -184,7 +230,6 @@ require_once('includes/conn.php');
                                 move_uploaded_file($fileTmpName, $fileDestination);
                                 $sqli = "INSERT INTO picture(name,tmp)VALUES('$fileNameNew','$tmp')";
                                 mysqli_query($mysqli, $sqli);
-                                //header('Location:acc.php');
                             }
                         }
                     }
@@ -220,11 +265,11 @@ require_once('includes/conn.php');
                         onsubmit="return validateForm()" name="employeeForm">
                         <div class="row form-group">
                             <div class="col-lg-6">
-                                <label>Name</label>
+                                <label>Name <span style="color:red;">*</span></label>
                                 <input type="text" class="form-control" name="fname" placeholder="Enter a Name">
                             </div>
                             <div class=" col-lg-6">
-                                <label>Date of Birth</label>
+                                <label>Date of Birth <span style="color:red;">*</span></label>
                                 <input class="form-control" type="text" name="date" id="datepicker"
                                     data-date-format="dd-mm-yyyy" autocomplete="off"
                                     placeholder="Enter a Date of Birth" />
@@ -232,60 +277,98 @@ require_once('includes/conn.php');
                         </div>
                         <div class="row form-group">
                             <div class="col-lg-6">
-                                <label>Email</label>
+                                <label>Email <span style="color:red;">*</span></label>
                                 <input type="email" class="form-control" name="email" placeholder="Enter a Valid Email">
                             </div>
                             <div class=" col-lg-6">
-                                <label>Phone</label>
+                                <label>Phone <span style="color:red;">*</span></label>
                                 <input type="text" class="form-control" name="phone" maxlength="10"
                                     placeholder="773452120">
                             </div>
                         </div>
                         <div class="row form-group">
                             <div class="col-lg-6">
-                                <label>Picture</label>
+                                <label>Picture <span style="color:red;">*</span></label>
                                 <input type="file" class="form-control" name="file">
                             </div>
                             <div class="col-lg-6">
-                                <label>Gender</label>
+                                <label>Gender <span style="color:red;">*</span></label>
                                 <select class="form-control" name="gender">
                                     <option value="male">Male</option>
                                     <option value="female">Female</option>
+                                    <option value="others">Others</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="row form-group">
                             <div class="col-lg-6">
-                                <label>Father Name</label>
+                                <label>Father Name <span style="color:red;">*</span></label>
                                 <input type="text" class="form-control" name="father" placeholder="Enter a Father Name">
                             </div>
                             <div class="col-lg-6">
-                                <label>Mother Name</label>
+                                <label>Mother Name <span style="color:red;">*</span></label>
                                 <input type="text" class="form-control" name="mother" placeholder="Enter a Mother Name">
                             </div>
                         </div>
 
                         <div class="row form-group">
                             <div class="col-lg-6">
-                                <label>Place</label>
+                                <label>Place <span style="color:red;">*</span></label>
                                 <input type="text" class="form-control" name="place" placeholder="Enter a Place">
                             </div>
                             <div class="col-lg-6">
-                                <label>Address</label>
+                                <label>Address <span style="color:red;">*</span></label>
                                 <input type="text" class="form-control" name="address" placeholder="Enter a Address">
                             </div>
                         </div>
-
+                        <div class="row form-group">
+                            <div class="col-lg-6">
+                                <label>Have any Previous Case <span style="color:red;">*</span></label>
+                                <input type="radio" class="form-check-input" id="previousCaseYes" name="previousCase"
+                                    value="yes">
+                                <label class="form-check-label" for="previousCaseYes">Yes</label>
+                                <input type="radio" class="form-check-input" id="previousCaseNo" name="previousCase"
+                                    value="no">
+                                <label class="form-check-label" for="previousCaseNo">No</label>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="form-group" id="previousCaseDropdown" style="display: none;">
+                                    <label>Previous Case <span style="color:red;">*</span></label>
+                                    <select id="incidentType" name="incident" class="form-control">
+                                        <option value="theft">Theft</option>
+                                        <option value="assault">Assault</option>
+                                        <option value="vandalism">Vandalism</option>
+                                        <option value="burglary">Burglary</option>
+                                        <option value="fraud">Fraud</option>
+                                        <option value="hit-and-run">Hit and Run</option>
+                                        <option value="domestic-violence">Domestic Violence</option>
+                                        <option value="kidnapping">Kidnapping</option>
+                                        <option value="robbery">Robbery</option>
+                                        <option value="cybercrime">Cybercrime</option>
+                                        <option value="carjacking">Carjacking</option>
+                                        <option value="arson">Arson</option>
+                                        <option value="homicide">Homicide</option>
+                                        <option value="sexual-assault">Sexual Assault</option>
+                                        <option value="drug-trafficking">Drug Trafficking</option>
+                                        <option value="cyber-extortion">Cyber Extortion</option>
+                                        <option value="stalking">Stalking</option>
+                                        <option value="white-collar-crime">White Collar Crime</option>
+                                        <option value="identity-theft">Identity Theft</option>
+                                        <option value="assault-with-a-weapon">Assault with a Weapon</option>
+                                        <option value="corruption">Corruption</option>
+                                        <option value="kidnapping">Kidnapping</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row form-group">
                             <div class="col-lg-12">
-                                <label>Description</label>
+                                <label>Description <span style="color:red;">*</span></label>
                                 <textarea class="form-control" name="description"
                                     placeholder="Enter a Description"></textarea>
                             </div>
                         </div>
-
-
                         <div class="row">
                             <div class="col-md-6">
                                 <button type="submit" name="submit" class="btn btn-suc btn-block"><span
@@ -326,6 +409,24 @@ require_once('includes/conn.php');
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.0/js/bootstrap-datepicker.js"></script>
+    <script type="text/javascript">
+        function logoutConfirmation() {
+            if (confirm("Are you sure you want to logout?")) {
+                window.location.href = "logout.php";
+            }
+        }
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('input[name="previousCase"]').change(function () {
+                if ($(this).val() == 'yes') {
+                    $('#previousCaseDropdown').show();
+                } else {
+                    $('#previousCaseDropdown').hide();
+                }
+            });
+        });
+    </script>
     <script>
         $(function () {
             $("#datepicker").datepicker({
@@ -347,9 +448,11 @@ require_once('includes/conn.php');
             var mother = document.forms["employeeForm"]["mother"].value;
             var place = document.forms["employeeForm"]["place"].value;
             var address = document.forms["employeeForm"]["address"].value;
+            var previousCase = document.forms["employeeForm"]["previousCase"].value;
+            var incident = document.forms["employeeForm"]["incident"].value;
             var description = document.forms["employeeForm"]["description"].value;
 
-            if (name === "" || dateOfBirth === "" || phone === "" || father === "" || mother === "" || place === "" || address === "" || description === "") {
+            if (name === "" || dateOfBirth === "" || phone === "" || father === "" || mother === "" || place === "" || address === "" || previousCase === "" || incident === "" || description === "") {
                 toastr.error('Please fill in all the fields');
                 return false;
             }
@@ -375,6 +478,16 @@ require_once('includes/conn.php');
 
             if (!isValidAddress(address)) {
                 toastr.error('Invalid address format');
+                return false;
+            }
+
+            if (!isValidPreviousCase(previousCase)) {
+                toastr.error('Invalid Previous Case format');
+                return false;
+            }
+
+            if (!isValidIncident(incident)) {
+                toastr.error('Invalid incident format');
                 return false;
             }
 
@@ -417,11 +530,19 @@ require_once('includes/conn.php');
         }
 
         function isValidGender(gender) {
-            return gender === 'male' || gender === 'female';
+            return gender === 'male' || gender === 'female' || gender === 'others';
         }
 
         function isValidAddress(address) {
             return address.length >= 5;
+        }
+
+        function isValidPreviousCase(previousCase) {
+            return address.length >= 1;
+        }
+
+        function isValidIncident(incident) {
+            return address.length >= 0;
         }
 
         function isValidDescription(description) {

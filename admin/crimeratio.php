@@ -94,23 +94,42 @@ $datewisePeriodNames = array_keys($datewiseCrimeData);
                     </a>
                 </li>
                 <li>
-                    <a href="invest.php">
-                        <i class="fa fa-link"></i>
-                        Report Issues
+                    <a href="criminalsearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Criminals
                     </a>
                 </li>
-                <?php
-                if ($_SESSION['permission'] == 1 or $_SESSION['permission'] == 2) {
+                <li>
+                    <a href="addcases.php">
+                        <i class="fa fa-plus"></i>
+                        Add Cases
+                    </a>
 
-
-                    ?>
-                    <li>
-                        <a href="v_issue.php">
-                            <i class="fa fa-table"></i>
-                            View Issues
-                        </a>
-                    </li>
-                <?php } ?>
+                </li>
+                <li>
+                    <a href="allcases.php">
+                        <i class="fa fa-book"></i>
+                        All Cases
+                    </a>
+                </li>
+                <li>
+                    <a href="casesearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Cases
+                    </a>
+                </li>
+                <li>
+                    <a href="caseratio.php">
+                        <i class="fa fa-bar-chart-o"></i>
+                        Case Ratio Chart
+                    </a>
+                </li>
+                <li>
+                    <a href="casetracker.php">
+                        <i class="fa fa-search"></i>
+                        Find all Cases
+                    </a>
+                </li>
                 <?php
                 if ($_SESSION['permission'] == 1) {
                     ?>
@@ -134,7 +153,7 @@ $datewisePeriodNames = array_keys($datewiseCrimeData);
                     </a>
                 </li>
                 <li>
-                    <a href="logout.php">
+                    <a href="#" onclick="logoutConfirmation()">
                         <i class="fa fa-power-off"></i>
                         Logout
                     </a>
@@ -148,6 +167,33 @@ $datewisePeriodNames = array_keys($datewiseCrimeData);
             <div clas="col-md-12">
                 <img src="assets/image/ssm.jpg" class="img-thumbnail">
             </div>
+
+            <nav class="navbar navbar-default sammacmedia">
+                <div class="container-fluid">
+
+                    <div class="navbar-header" id="sams">
+                        <button type="button" id="sidebarCollapse" id="makota"
+                            class="btn btn-sam animated tada navbar-btn">
+                            <i class="glyphicon glyphicon-align-left"></i>
+                            <span>Menu</span>
+                        </button>
+                    </div>
+
+                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                        <ul class="nav navbar-nav navbar-right  makotasamuel">
+                            <li><a href="#" style="color:white;">
+                                    <?php require_once('includes/name.php'); ?>
+                                </a></li>
+                            <li><a href="logout.php"><i class="fa fa-power-off" style="color:white;"> Logout</i></a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <br />
+
             <h1 class="text-center">Crime Report Statistics</h1>
             <!-- Your existing HTML code -->
 
@@ -194,6 +240,14 @@ $datewisePeriodNames = array_keys($datewiseCrimeData);
 
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script type="text/javascript">
+        function logoutConfirmation() {
+            if (confirm("Are you sure you want to logout?")) {
+                window.location.href = "logout.php";
+            }
+        }
+    </script>
 
     <script type="text/javascript">
         $(document).ready(function () {

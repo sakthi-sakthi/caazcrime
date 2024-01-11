@@ -27,7 +27,7 @@ require_once('includes/conn.php');
         <!-- Sidebar Holder -->
         <nav id="sidebar" class="sammacmedia">
             <div class="sidebar-header">
-                <h3>CAAZ SMS</h3>
+                <h3>CAT GENIUS</h3>
                 <strong>SMS</strong>
             </div>
 
@@ -46,7 +46,7 @@ require_once('includes/conn.php');
                     <li>
                         <a href="a_employees.php">
                             <i class="fa fa-plus"></i>
-                            Add Criminials
+                            Add Criminals
                         </a>
 
                     </li>
@@ -54,7 +54,7 @@ require_once('includes/conn.php');
                 <li>
                     <a href="all_employees.php">
                         <i class="fa fa-table"></i>
-                        All Criminials
+                        All Criminals
                     </a>
                 </li>
                 <li>
@@ -64,27 +64,44 @@ require_once('includes/conn.php');
                     </a>
                 </li>
                 <li>
-                    <a href="invest.php">
-                        <i class="fa fa-link"></i>
-                        Report Issues
+                    <a href="criminalsearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Criminals
+                    </a>
+                </li>
+                <li>
+                    <a href="addcases.php">
+                        <i class="fa fa-plus"></i>
+                        Add Cases
+                    </a>
+
+                </li>
+                <li>
+                    <a href="allcases.php">
+                        <i class="fa fa-book"></i>
+                        All Cases
+                    </a>
+                </li>
+                <li>
+                    <a href="casesearch.php">
+                        <i class="fa fa-search"></i>
+                        Search Cases
+                    </a>
+                </li>
+                <li>
+                    <a href="caseratio.php">
+                        <i class="fa fa-bar-chart-o"></i>
+                        Case Ratio Chart
+                    </a>
+                </li>
+                <li>
+                    <a href="casetracker.php">
+                        <i class="fa fa-search"></i>
+                        Find all Cases
                     </a>
                 </li>
                 <?php
-                if ($_SESSION['permission'] == 1 or $_SESSION['permission'] == 2) {
-
-
-                    ?>
-                    <li>
-                        <a href="v_issue.php">
-                            <i class="fa fa-table"></i>
-                            View Issues
-                        </a>
-                    </li>
-                <?php } ?>
-                <?php
-                if ($_SESSION['permission'] == 1 or $_SESSION['permission'] == 2) {
-
-
+                if ($_SESSION['permission'] == 1) {
                     ?>
                     <li class="active">
                         <a href="a_users.php">
@@ -106,7 +123,7 @@ require_once('includes/conn.php');
                     </a>
                 </li>
                 <li>
-                    <a href="logout.php">
+                    <a href="#" onclick="logoutConfirmation()">
                         <i class="fa fa-power-off"></i>
                         Logout
                     </a>
@@ -135,10 +152,11 @@ require_once('includes/conn.php');
 
                     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                         <ul class="nav navbar-nav navbar-right  makotasamuel">
-                            <li><a href="#">
+                            <li><a href="#" style="color:white;">
                                     <?php require_once('includes/name.php'); ?>
                                 </a></li>
-                            <li><a href="logout.php"><i class="fa fa-power-off"> Logout</i></a></li>
+                            <li><a href="logout.php"><i class="fa fa-power-off" style="color:white;"> Logout</i></a>
+                            </li>
 
                         </ul>
                     </div>
@@ -223,11 +241,11 @@ require_once('includes/conn.php');
                         <div class="row form-group">
                             <div class="col-lg-6">
                                 <label>Name</label>
-                                <input type="text" class="form-control" name="name" pattern="[A-Za-z]{3,}" required>
+                                <input type="text" class="form-control" name="name" required>
                             </div>
                             <div class="col-lg-6">
                                 <label>Surname</label>
-                                <input type="text" class="form-control" name="surname" pattern="[A-Za-z]{3,}" required>
+                                <input type="text" class="form-control" name="surname" required>
                             </div>
                         </div>
                         <div class="row form-group">
@@ -237,7 +255,8 @@ require_once('includes/conn.php');
                             </div>
                             <div class="col-lg-6">
                                 <label>Phone</label>
-                                <input type="text" class="form-control" name="phone" placeholder="773452120" required>
+                                <input type="text" class="form-control" name="phone" placeholder="773452120"
+                                    maxlength="10" required>
                             </div>
                         </div>
                         <div class="row form-group">
@@ -252,8 +271,8 @@ require_once('includes/conn.php');
                             <div class="col-lg-6">
                                 <label>Gender</label>
                                 <select class="form-control" name="gender">
-                                    <option>F</option>
                                     <option>M</option>
+                                    <option>F</option>
                                 </select>
                             </div>
                         </div>
@@ -304,6 +323,14 @@ require_once('includes/conn.php');
     <script src="assets/js/jquery-1.10.2.js"></script>
     <!-- Bootstrap Js CDN -->
     <script src="assets/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript">
+        function logoutConfirmation() {
+            if (confirm("Are you sure you want to logout?")) {
+                window.location.href = "logout.php";
+            }
+        }
+    </script>
 
     <script type="text/javascript">
         $(document).ready(function () {
